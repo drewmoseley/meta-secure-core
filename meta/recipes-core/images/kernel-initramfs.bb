@@ -29,6 +29,7 @@ python() {
         d.appendVarFlag('do_install', 'depends', ' ${INITRAMFS_IMAGE}:do_image_complete')
 }
 
+do_install[depends] += "virtual/kernel:do_shared_workdir"
 do_unpack[depends] += "virtual/kernel:do_deploy"
 do_populate_lic[depends] += "virtual/kernel:do_deploy"
 

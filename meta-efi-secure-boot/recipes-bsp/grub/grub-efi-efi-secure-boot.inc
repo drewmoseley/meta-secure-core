@@ -38,7 +38,7 @@ SRC_URI += "\
 # functions efi_call_foo and efi_shim_exit are not implemented for arm64 yet
 COMPATIBLE_HOST_aarch64 = 'null'
 
-EFI_BOOT_PATH ?= "/boot/EFI/BOOT"
+EFI_BOOT_PATH = "${EFI_FILES_PATH}"
 
 GRUB_SECURE_BOOT_MODULES += "${@'efivar password_pbkdf2 ' if d.getVar('UEFI_SB', True) == '1' else ''}"
 

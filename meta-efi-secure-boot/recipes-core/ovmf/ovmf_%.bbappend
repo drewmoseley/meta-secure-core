@@ -12,7 +12,8 @@ do_compile_class-target_append() {
     fi
 }
 
-EFI_TARGET = "/boot/EFI/BOOT"
+require conf/image-uefi.conf
+EFI_TARGET = "${EFI_FILES_PATH}"
 
 do_install_class-target_append() {
     if ${@bb.utils.contains('PACKAGECONFIG', 'secureboot', 'true', 'false', d)}; then

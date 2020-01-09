@@ -49,7 +49,8 @@ EXTRA_OEMAKE = "\
 EXTRA_OEMAKE_append_x86 += " ARCH=ia32"
 EXTRA_OEMAKE_append_x86-64 += " ARCH=x86_64"
 
-EFI_BOOT_PATH = "/boot/EFI/BOOT"
+require conf/image-uefi.conf
+EFI_BOOT_PATH = "${EFI_FILES_PATH}"
 
 do_compile_prepend() {
     sed -i -e "1s:#!.*:#!/usr/bin/env nativeperl:" xxdi.pl 

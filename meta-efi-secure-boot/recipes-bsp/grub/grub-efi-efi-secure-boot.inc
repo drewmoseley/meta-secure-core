@@ -1,6 +1,9 @@
 DEPENDS += "openssl-native"
 FILESEXTRAPATHS_prepend := "${THISDIR}/grub-efi:"
 
+# This will be provided by grub-efi when secureboot is enabled
+RDEPENDS_${PN}_class-target_remove = "virtual/grub-bootconf"
+
 GRUB_SIGN_VERIFY_STRICT ?= "1"
 
 EXTRA_SRC_URI = "\

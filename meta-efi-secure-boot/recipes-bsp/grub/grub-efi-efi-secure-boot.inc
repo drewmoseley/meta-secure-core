@@ -183,6 +183,7 @@ addtask chownboot after do_deploy before do_package
 # Append the do_deploy() in oe-core.
 do_deploy_append_class-target() {
     install -m 0644 "${D}${EFI_BOOT_PATH}/${GRUB_IMAGE}" "${DEPLOYDIR}"
+    [ -n "${GRUB_IMAGE_PREFIX}" ] && ln -s ${GRUB_IMAGE} ${DEPLOYDIR}/${GRUB_IMAGE_PREFIX}bootx64.efi
 
     install -d "${DEPLOYDIR}/efi-unsigned"
     install -m 0644 "${B}/${GRUB_IMAGE}" "${DEPLOYDIR}/efi-unsigned"

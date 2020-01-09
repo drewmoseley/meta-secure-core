@@ -59,13 +59,13 @@ ALTERNATIVE_${PN} = ""
 python do_package_prepend () {
     if d.getVar('BUNDLE') == '1':
         d.appendVar(d.expand('ALTERNATIVE_${PN}'), ' ' + d.expand('${KERNEL_IMAGETYPE}' + '-initramfs'))
-        d.setVarFlag('ALTERNATIVE_LINK_NAME', d.expand('${KERNEL_IMAGETYPE}') + '-initramfs', d.expand('/boot/${KERNEL_IMAGETYPE}-initramfs'))
+        d.setVarFlag('ALTERNATIVE_LINK_NAME', d.expand('${KERNEL_IMAGETYPE}') + '-initramfs', d.expand('${KERNEL_IMAGETYPE}-initramfs'))
         d.setVarFlag('ALTERNATIVE_TARGET', d.expand('${KERNEL_IMAGETYPE}') + '-initramfs', d.expand('/boot/${KERNEL_IMAGETYPE}-initramfs${INITRAMFS_EXT_NAME}'))
         d.setVarFlag('ALTERNATIVE_PRIORITY', d.expand('${KERNEL_IMAGETYPE}') + '-initramfs', '50101')
     else:
         for compr in d.getVar('INITRAMFS_FSTYPES').split():
             d.appendVar(d.expand('ALTERNATIVE_${PN}'), ' ' + d.expand('${INITRAMFS_IMAGE}'))
-            d.setVarFlag('ALTERNATIVE_LINK_NAME', d.expand('${INITRAMFS_IMAGE}'), d.expand('/boot/${INITRAMFS_IMAGE}'))
+            d.setVarFlag('ALTERNATIVE_LINK_NAME', d.expand('${INITRAMFS_IMAGE}'), d.expand('${INITRAMFS_IMAGE}'))
             d.setVarFlag('ALTERNATIVE_TARGET', d.expand('${INITRAMFS_IMAGE}'), d.expand('/boot/${INITRAMFS_IMAGE}${INITRAMFS_EXT_NAME}.' + compr))
             d.setVarFlag('ALTERNATIVE_PRIORITY', d.expand('${INITRAMFS_IMAGE}'), '50101')
 }

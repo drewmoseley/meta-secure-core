@@ -1,0 +1,12 @@
+# short-description: Create an EFI disk image with efi-secure-boot
+# long-description: Creates a partitioned EFI disk image that the user
+# can directly dd to boot media. The selected bootloader is grub-efi.
+# It also includes efi-secure-boot support.
+
+part /boot --source rootfs --ondisk sda --fstype=vfat --label msdos --active --align 1024 --use-uuid --rootfs-dir=${IMAGE_ROOTFS}/boot
+
+part / --source rootfs --ondisk sda --fstype=ext4 --label platform --align 1024 --use-uuid --exclude=boot
+
+part swap --ondisk sda --size 44 --label swap1 --fstype=swap --use-uuid
+
+bootloader --ptable gpt --timeout=5 --append="rootfstype=ext4 ${APPEND}"

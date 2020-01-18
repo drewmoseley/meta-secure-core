@@ -39,7 +39,7 @@ EFI_BOOT_PATH ?= "/boot/efi/EFI/BOOT"
 
 GRUB_SECURE_BOOT_MODULES += "${@'efivar password_pbkdf2 ' if d.getVar('UEFI_SB', True) == '1' else ''}"
 
-GRUB_SIGNING_MODULES += "${@'pgp gcry_rsa gcry_sha256 gcry_sha512 --pubkey %s ' % d.getVar('GRUB_PUB_KEY', True) \
+GRUB_SIGNING_MODULES += "${@'verify gcry_rsa gcry_sha256 gcry_sha512 --pubkey %s ' % d.getVar('GRUB_PUB_KEY', True) \
   if d.getVar('GRUB_SIGN_VERIFY', True) == '1' else ''}"
 
 GRUB_SELOADER_MODULES += "${@'mok2verify ' if d.getVar('UEFI_SELOADER', True) == '1' else ''}"

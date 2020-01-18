@@ -1,7 +1,7 @@
-From 8a7ad88b4880e25df1f54b80631dc035e1e25662 Mon Sep 17 00:00:00 2001
+From 960aeb2f45ede844a62ab7e4f52ede39b8afd8ce Mon Sep 17 00:00:00 2001
 From: Jason Wessel <jason.wessel@windriver.com>
 Date: Thu, 17 Oct 2019 12:35:01 -0700
-Subject: [PATCH] grub verify:  Add strict_security variable
+Subject: [PATCH] grub verify: Add strict_security variable
 
 With strict_security set to 1, it is impossible to change the value of
 check_signatures.  It will also cause grub to reboot instead of
@@ -12,22 +12,24 @@ Upstream-Status: Pending
 
 Signed-off-by: Jason Wessel <jason.wessel@windriver.com>
 ---
- grub-core/commands/pgp.c |   16 +++++++++++++++-
- grub-core/kern/main.c    |    9 +++++++++
- grub-core/normal/main.c  |    7 +++++--
+ grub-core/commands/verify.c | 16 +++++++++++++++-
+ grub-core/kern/main.c       |  9 +++++++++
+ grub-core/normal/main.c     |  7 +++++--
  3 files changed, 29 insertions(+), 3 deletions(-)
 
---- a/grub-core/commands/pgp.c
-+++ b/grub-core/commands/pgp.c
-@@ -864,6 +864,7 @@ grub_cmd_verify_signature (grub_extcmd_c
+diff --git a/grub-core/commands/verify.c b/grub-core/commands/verify.c
+index 67cb1c7..9672e02 100644
+--- a/grub-core/commands/verify.c
++++ b/grub-core/commands/verify.c
+@@ -814,6 +814,7 @@ grub_cmd_verify_signature (grub_extcmd_context_t ctxt,
  }
  
  static int sec = 0;
 +static int strict_sec = 0;
  
- static grub_err_t
- grub_pubkey_init (grub_file_t io, enum grub_file_type type __attribute__ ((unused)),
-@@ -918,10 +919,21 @@ static char *
+ static void
+ verified_free (grub_verified_t verified)
+@@ -950,10 +951,21 @@ static char *
  grub_env_write_sec (struct grub_env_var *var __attribute__ ((unused)),
  		    const char *val)
  {
@@ -50,8 +52,8 @@ Signed-off-by: Jason Wessel <jason.wessel@windriver.com>
  static grub_ssize_t 
  pseudo_read (struct grub_file *file, char *buf, grub_size_t len)
  {
-@@ -961,7 +973,9 @@ GRUB_MOD_INIT(pgp)
-     sec = 0;
+@@ -987,7 +999,9 @@ GRUB_MOD_INIT(verify)
+   grub_file_filter_register (GRUB_FILE_FILTER_PUBKEY, grub_pubkey_open);
  
    grub_register_variable_hook ("check_signatures", 0, grub_env_write_sec);
 +  grub_register_variable_hook ("strict_security", 0, grub_env_write_strict_sec);
@@ -60,6 +62,8 @@ Signed-off-by: Jason Wessel <jason.wessel@windriver.com>
  
    grub_pk_trusted = 0;
    FOR_MODULES (header)
+diff --git a/grub-core/kern/main.c b/grub-core/kern/main.c
+index 9cad0c4..aaa4e8a 100644
 --- a/grub-core/kern/main.c
 +++ b/grub-core/kern/main.c
 @@ -29,6 +29,7 @@
@@ -84,9 +88,11 @@ Signed-off-by: Jason Wessel <jason.wessel@windriver.com>
 +    }
    grub_rescue_run ();
  }
+diff --git a/grub-core/normal/main.c b/grub-core/normal/main.c
+index 78a70a8..7f44e3f 100644
 --- a/grub-core/normal/main.c
 +++ b/grub-core/normal/main.c
-@@ -301,8 +301,11 @@ grub_enter_normal_mode (const char *conf
+@@ -301,8 +301,11 @@ grub_enter_normal_mode (const char *config)
    grub_boot_time ("Entering normal mode");
    nested_level++;
    grub_normal_execute (config, 0, 0);
@@ -100,3 +106,6 @@ Signed-off-by: Jason Wessel <jason.wessel@windriver.com>
    nested_level--;
    if (grub_normal_exit_level)
      grub_normal_exit_level--;
+-- 
+2.25.0
+

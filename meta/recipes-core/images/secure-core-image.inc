@@ -16,9 +16,13 @@ SECURE_CORE_IMAGE_EXTRA_INSTALL_append += "\
                          "packagegroup-ids", "", d)} \
 "
 
+python () {
+   if d.expand('${INITRAMFS_IMAGE}') != '':
+       d.appendVar('IMAGE_INSTALL', ' kernel-initramfs')
+}
+
 IMAGE_INSTALL = "\
     packagegroup-core-boot \
-    kernel-initramfs \
     dnf \
     ${SECURE_CORE_IMAGE_EXTRA_INSTALL} \
 "

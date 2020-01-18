@@ -83,13 +83,13 @@ do_compile_append() {
 		cat<<EOF>${WORKDIR}/cfg
 insmod verify
 set strict_security=1
-search.file /EFI/BOOT/grub.cfg root
-set prefix=(\$root)/EFI/BOOT
+search.file ${EFIDIR}/grub.cfg root
+set prefix=(\$root)${EFIDIR}
 EOF
 	else
 		cat<<EOF>${WORKDIR}/cfg
-search.file /EFI/BOOT/grub.cfg root
-set prefix=(\$root)/EFI/BOOT
+search.file ${EFIDIR}/grub.cfg root
+set prefix=(\$root)${EFIDIR}
 EOF
 	fi
 }
@@ -137,7 +137,7 @@ do_install_append_class-target() {
     grub-editenv "${D}${EFI_BOOT_PATH}/grubenv" create
 
     install -d "${D}${EFI_BOOT_PATH}/${GRUB_TARGET}-efi"
-    grub-mkimage -c ../cfg -p /EFI/BOOT -d "./grub-core" \
+    grub-mkimage -c ../cfg -p ${EFIDIR} -d "./grub-core" \
         -O "${GRUB_TARGET}-efi" -o "${B}/${GRUB_IMAGE}" \
         ${GRUB_BUILDIN}
 

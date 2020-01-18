@@ -83,12 +83,12 @@ do_compile_append() {
 		cat<<EOF>${WORKDIR}/cfg
 insmod verify
 set strict_security=1
-search.file (\$cmdpath)/EFI/BOOT/grub.cfg root
+search.file /EFI/BOOT/grub.cfg root
 set prefix=(\$root)/EFI/BOOT
 EOF
 	else
 		cat<<EOF>${WORKDIR}/cfg
-search.file (\$cmdpath)/EFI/BOOT/grub.cfg root
+search.file /EFI/BOOT/grub.cfg root
 set prefix=(\$root)/EFI/BOOT
 EOF
 	fi

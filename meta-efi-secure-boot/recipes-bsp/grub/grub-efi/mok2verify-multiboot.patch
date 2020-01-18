@@ -1,16 +1,7 @@
-From 2ea0969e1283d38ed916744d0e223cb9f2fe5846 Mon Sep 17 00:00:00 2001
-From: Drew Moseley <drew.moseley@northern.tech>
-Date: Sat, 18 Jan 2020 03:11:31 +0000
-Subject: [PATCH] mok2verify-multiboot
-
----
- grub-core/loader/multiboot.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/grub-core/loader/multiboot.c b/grub-core/loader/multiboot.c
-index bd9d5b3..bf6fa80 100644
---- a/grub-core/loader/multiboot.c
-+++ b/grub-core/loader/multiboot.c
+Index: grub-2.02/grub-core/loader/multiboot.c
+===================================================================
+--- grub-2.02.orig/grub-core/loader/multiboot.c
++++ grub-2.02/grub-core/loader/multiboot.c
 @@ -47,6 +47,7 @@ GRUB_MOD_LICENSE ("GPLv3+");
  
  #ifdef GRUB_MACHINE_EFI
@@ -18,8 +9,8 @@ index bd9d5b3..bf6fa80 100644
 +#include <grub/efi/mok2verify.h>
  #endif
  
- struct grub_relocator *grub_multiboot_relocator = NULL;
-@@ -310,6 +311,20 @@ grub_cmd_multiboot (grub_command_t cmd __attribute__ ((unused)),
+ struct grub_relocator *GRUB_MULTIBOOT (relocator) = NULL;
+@@ -325,6 +326,20 @@ grub_cmd_multiboot (grub_command_t cmd _
    if (! file)
      return grub_errno;
  
@@ -40,7 +31,7 @@ index bd9d5b3..bf6fa80 100644
    grub_dl_ref (my_mod);
  
    /* Skip filename.  */
-@@ -379,6 +394,20 @@ grub_cmd_module (grub_command_t cmd __attribute__ ((unused)),
+@@ -379,6 +394,20 @@ grub_cmd_module (grub_command_t cmd __at
    if (! file)
      return grub_errno;
  
@@ -61,6 +52,3 @@ index bd9d5b3..bf6fa80 100644
  #ifndef GRUB_USE_MULTIBOOT2
    lowest_addr = 0x100000;
    if (grub_multiboot_quirks & GRUB_MULTIBOOT_QUIRK_MODULES_AFTER_KERNEL)
--- 
-2.25.0
-

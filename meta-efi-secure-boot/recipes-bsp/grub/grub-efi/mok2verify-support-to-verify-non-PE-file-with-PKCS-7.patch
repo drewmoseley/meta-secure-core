@@ -1,4 +1,4 @@
-From 7e4d0a0860be38837c2184c464ae441e2c52cd6c Mon Sep 17 00:00:00 2001
+From 69884cfde30dc876cda61714f1476a3d331bc2db Mon Sep 17 00:00:00 2001
 From: Lans Zhang <jia.zhang@windriver.com>
 Date: Wed, 12 Jul 2017 16:02:13 +0800
 Subject: [PATCH] mok2verify: support to verify non-PE file with PKCS#7
@@ -37,39 +37,35 @@ grub_file_open function.
 
 Signed-off-by: Yi Zhao <yi.zhao@windriver.com>
 ---
- grub-core/Makefile.core.def    |   6 ++
- grub-core/commands/boot.c      |  14 ++-
- grub-core/gfxmenu/gui_label.c  |  39 +++++--
- grub-core/lib/efi/mok2verify.c | 182 +++++++++++++++++++++++++++++++++
- grub-core/loader/i386/linux.c  |  60 +++++++++++
- grub-core/loader/linux.c       |  27 ++++-
- grub-core/normal/main.c        |  53 +++++++++-
- grub-core/normal/menu.c        |  31 ++++--
- grub-core/normal/menu_text.c   |  33 ++++--
- include/grub/efi/mok2verify.h  |  48 +++++++++
+ grub-core/Makefile.core.def    |    6 +
+ grub-core/commands/boot.c      |   14 ++-
+ grub-core/gfxmenu/gui_label.c  |   39 +++++++-
+ grub-core/lib/efi/mok2verify.c |  182 +++++++++++++++++++++++++++++++++++++++++
+ grub-core/loader/i386/linux.c  |   60 +++++++++++++
+ grub-core/loader/linux.c       |   27 +++++-
+ grub-core/normal/main.c        |   53 +++++++++++
+ grub-core/normal/menu.c        |   31 +++++-
+ grub-core/normal/menu_text.c   |   33 +++++--
+ include/grub/efi/mok2verify.h  |   48 ++++++++++
  10 files changed, 463 insertions(+), 30 deletions(-)
  create mode 100644 grub-core/lib/efi/mok2verify.c
  create mode 100644 include/grub/efi/mok2verify.h
 
-diff --git a/grub-core/Makefile.core.def b/grub-core/Makefile.core.def
-index a82c1f3..76b3c7d 100644
 --- a/grub-core/Makefile.core.def
 +++ b/grub-core/Makefile.core.def
-@@ -1753,6 +1753,12 @@ module = {
-   enable = efi;
+@@ -1870,6 +1870,12 @@ module = {
  };
  
-+module = {
+ module = {
 +  name = mok2verify;
 +  efi = lib/efi/mok2verify.c;
 +  enable = efi;
 +};
 +
- module = {
++module = {
    name = mmap;
    common = mmap/mmap.c;
-diff --git a/grub-core/commands/boot.c b/grub-core/commands/boot.c
-index bbca81e..3f44a7e 100644
+   x86 = mmap/i386/uppermem.c;
 --- a/grub-core/commands/boot.c
 +++ b/grub-core/commands/boot.c
 @@ -24,6 +24,9 @@
@@ -100,8 +96,6 @@ index bbca81e..3f44a7e 100644
  
    grub_machine_fini (grub_loader_flags);
  
-diff --git a/grub-core/gfxmenu/gui_label.c b/grub-core/gfxmenu/gui_label.c
-index a4c8178..da49c9e 100644
 --- a/grub-core/gfxmenu/gui_label.c
 +++ b/grub-core/gfxmenu/gui_label.c
 @@ -24,6 +24,9 @@
@@ -114,7 +108,7 @@ index a4c8178..da49c9e 100644
  
  static const char *align_options[] =
  {
-@@ -183,15 +186,37 @@ label_set_property (void *vself, const char *name, const char *value)
+@@ -183,15 +186,37 @@ label_set_property (void *vself, const c
        else
  	{
  	   if (grub_strcmp (value, "@KEYMAP_LONG@") == 0)
@@ -159,9 +153,6 @@ index a4c8178..da49c9e 100644
  	   /* FIXME: Add more templates here if needed.  */
  	  self->template = grub_strdup (value);
  	  self->text = grub_xasprintf (value, self->value);
-diff --git a/grub-core/lib/efi/mok2verify.c b/grub-core/lib/efi/mok2verify.c
-new file mode 100644
-index 0000000..790efa0
 --- /dev/null
 +++ b/grub-core/lib/efi/mok2verify.c
 @@ -0,0 +1,182 @@
@@ -347,27 +338,25 @@ index 0000000..790efa0
 +}
 +
 +#pragma GCC diagnostic error "-Wvla"
-diff --git a/grub-core/loader/i386/linux.c b/grub-core/loader/i386/linux.c
-index 661de78..458103d 100644
 --- a/grub-core/loader/i386/linux.c
 +++ b/grub-core/loader/i386/linux.c
-@@ -39,6 +39,9 @@
- #include <grub/i18n.h>
+@@ -40,6 +40,9 @@
  #include <grub/lib/cmdline.h>
  #include <grub/linux.h>
+ #include <grub/machine/kernel.h>
 +#ifdef GRUB_MACHINE_EFI
 +#include <grub/efi/mok2verify.h>
 +#endif
  
  GRUB_MOD_LICENSE ("GPLv3+");
  
-@@ -694,6 +697,55 @@ grub_shim_verify (grub_addr_t addr, grub_ssize_t size)
+@@ -657,6 +660,55 @@ grub_shim_verify (grub_addr_t addr, grub
    return GRUB_ERR_NONE;
  }
  
 +#ifdef GRUB_MACHINE_EFI
 +static grub_err_t
-+grub_verify_linux (const char *path)
++grub_verify_linux (const char *path, enum grub_file_type type)
 +{
 +  grub_file_t file;
 +  grub_ssize_t size;
@@ -375,7 +364,7 @@ index 661de78..458103d 100644
 +
 +  grub_dprintf ("linux", "Verifying kernel %s\n", path);
 +
-+  file = grub_file_open (path);
++  file = grub_file_open (path, type);
 +  if (!file)
 +    return grub_errno;
 +
@@ -408,7 +397,7 @@ index 661de78..458103d 100644
 +}
 +#else
 +static grub_err_t
-+grub_verify_linux (const char *path)
++grub_verify_linux (const char *path, enum grub_file_type type)
 +{
 +  return GRUB_ERR_NONE;
 +}
@@ -417,17 +406,17 @@ index 661de78..458103d 100644
  static grub_err_t
  grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
  		int argc, char *argv[])
-@@ -716,6 +768,9 @@ grub_cmd_linux (grub_command_t cmd __attribute__ ((unused)),
+@@ -679,6 +731,9 @@ grub_cmd_linux (grub_command_t cmd __att
        goto fail;
      }
  
-+  if (grub_verify_linux (argv[0]))
++  if (grub_verify_linux (argv[0], GRUB_FILE_TYPE_LINUX_KERNEL))
 +    goto fail;
 +
-   file = grub_file_open (argv[0]);
+   file = grub_file_open (argv[0], GRUB_FILE_TYPE_LINUX_KERNEL);
    if (! file)
      goto fail;
-@@ -1157,6 +1212,11 @@ grub_cmd_initrd (grub_command_t cmd __attribute__ ((unused)),
+@@ -1140,6 +1195,11 @@ grub_cmd_initrd (grub_command_t cmd __at
   fail:
    grub_initrd_close (&initrd_ctx);
  
@@ -439,8 +428,6 @@ index 661de78..458103d 100644
    return grub_errno;
  }
  
-diff --git a/grub-core/loader/linux.c b/grub-core/loader/linux.c
-index be6fa0f..27afbe8 100644
 --- a/grub-core/loader/linux.c
 +++ b/grub-core/loader/linux.c
 @@ -4,6 +4,9 @@
@@ -453,7 +440,7 @@ index be6fa0f..27afbe8 100644
  
  struct newc_head
  {
-@@ -253,6 +256,7 @@ grub_initrd_load (struct grub_linux_initrd_context *initrd_ctx,
+@@ -253,6 +256,7 @@ grub_initrd_load (struct grub_linux_init
    int newc = 0;
    struct dir *root = 0;
    grub_ssize_t cursize = 0;
@@ -461,7 +448,7 @@ index be6fa0f..27afbe8 100644
  
    for (i = 0; i < initrd_ctx->nfiles; i++)
      {
-@@ -288,6 +292,25 @@ grub_initrd_load (struct grub_linux_initrd_context *initrd_ctx,
+@@ -288,6 +292,25 @@ grub_initrd_load (struct grub_linux_init
  	  grub_initrd_close (initrd_ctx);
  	  return grub_errno;
  	}
@@ -487,7 +474,7 @@ index be6fa0f..27afbe8 100644
        ptr += cursize;
      }
    if (newc)
-@@ -296,7 +319,9 @@ grub_initrd_load (struct grub_linux_initrd_context *initrd_ctx,
+@@ -296,7 +319,9 @@ grub_initrd_load (struct grub_linux_init
        ptr += ALIGN_UP_OVERHEAD (cursize, 4);
        ptr = make_header (ptr, "TRAILER!!!", sizeof ("TRAILER!!!") - 1, 0, 0);
      }
@@ -498,8 +485,6 @@ index be6fa0f..27afbe8 100644
 -  return GRUB_ERR_NONE;
 +  return err;
  }
-diff --git a/grub-core/normal/main.c b/grub-core/normal/main.c
-index 7f44e3f..18b0562 100644
 --- a/grub-core/normal/main.c
 +++ b/grub-core/normal/main.c
 @@ -33,6 +33,9 @@
@@ -521,7 +506,7 @@ index 7f44e3f..18b0562 100644
  /* Initialize the screen.  */
  void
  grub_normal_init_page (struct grub_term_output *term,
-@@ -202,13 +207,24 @@ grub_normal_init_page (struct grub_term_output *term,
+@@ -202,13 +207,24 @@ grub_normal_init_page (struct grub_term_
  {
    grub_ssize_t msg_len;
    int posx;
@@ -547,7 +532,7 @@ index 7f44e3f..18b0562 100644
    if (!msg_formatted)
      return;
   
-@@ -233,6 +249,8 @@ grub_normal_init_page (struct grub_term_output *term,
+@@ -233,6 +249,8 @@ grub_normal_init_page (struct grub_term_
    grub_free (unicode_msg);
  }
  
@@ -556,7 +541,7 @@ index 7f44e3f..18b0562 100644
  static void
  read_lists (const char *val)
  {
-@@ -273,6 +291,20 @@ grub_normal_execute (const char *config, int nested, int batch)
+@@ -273,6 +291,20 @@ grub_normal_execute (const char *config,
  
    if (config)
      {
@@ -577,7 +562,7 @@ index 7f44e3f..18b0562 100644
        menu = read_config_file (config);
  
        /* Ignore any error.  */
-@@ -304,7 +336,10 @@ grub_enter_normal_mode (const char *config)
+@@ -304,7 +336,10 @@ grub_enter_normal_mode (const char *conf
    const char *val = grub_env_get ("strict_security");
    if (!(val && (val[0] == '1' || val[0] == 'e'))) {
      grub_boot_time ("Entering shell");
@@ -589,7 +574,7 @@ index 7f44e3f..18b0562 100644
    }
    nested_level--;
    if (grub_normal_exit_level)
-@@ -341,6 +376,13 @@ grub_cmd_normal (struct grub_command *cmd __attribute__ ((unused)),
+@@ -341,6 +376,13 @@ grub_cmd_normal (struct grub_command *cm
      grub_enter_normal_mode (argv[0]);
  
  quit:
@@ -617,8 +602,6 @@ index 7f44e3f..18b0562 100644
  
    /* Reload terminal colors when these variables are written to.  */
    grub_register_variable_hook ("color_normal", NULL, grub_env_write_color_normal);
-diff --git a/grub-core/normal/menu.c b/grub-core/normal/menu.c
-index 719e2fb..0665abc 100644
 --- a/grub-core/normal/menu.c
 +++ b/grub-core/normal/menu.c
 @@ -32,6 +32,9 @@
@@ -631,7 +614,7 @@ index 719e2fb..0665abc 100644
  
  /* Time to delay after displaying an error message about a default/fallback
     entry failing to boot.  */
-@@ -772,18 +775,30 @@ run_menu (grub_menu_t menu, int nested, int *auto_boot)
+@@ -773,18 +776,30 @@ run_menu (grub_menu_t menu, int nested,
  	      break;
  
  	    case 'c':
@@ -670,8 +653,6 @@ index 719e2fb..0665abc 100644
  
  	    default:
  	      {
-diff --git a/grub-core/normal/menu_text.c b/grub-core/normal/menu_text.c
-index e22bb91..28c675f 100644
 --- a/grub-core/normal/menu_text.c
 +++ b/grub-core/normal/menu_text.c
 @@ -27,6 +27,9 @@
@@ -684,7 +665,7 @@ index e22bb91..28c675f 100644
  
  static grub_uint8_t grub_color_menu_normal;
  static grub_uint8_t grub_color_menu_highlight;
-@@ -165,6 +168,7 @@ command-line or ESC to discard edits and return to the GRUB menu."),
+@@ -165,6 +168,7 @@ command-line or ESC to discard edits and
      }
    else
      {
@@ -692,7 +673,7 @@ index e22bb91..28c675f 100644
        char *msg_translated;
  
        msg_translated = grub_xasprintf (_("Use the %C and %C keys to select which "
-@@ -180,19 +184,32 @@ command-line or ESC to discard edits and return to the GRUB menu."),
+@@ -180,19 +184,32 @@ command-line or ESC to discard edits and
  
        if (nested)
  	{
@@ -733,9 +714,6 @@ index e22bb91..28c675f 100644
  	}	
      }
    return ret;
-diff --git a/include/grub/efi/mok2verify.h b/include/grub/efi/mok2verify.h
-new file mode 100644
-index 0000000..98ef2d4
 --- /dev/null
 +++ b/include/grub/efi/mok2verify.h
 @@ -0,0 +1,48 @@
@@ -787,6 +765,3 @@ index 0000000..98ef2d4
 +EXPORT_FUNC (grub_verify_file) (const char *path);
 +
 +#endif	/* ! GRUB_EFI_MOK2_VERIFY_HEADER */
--- 
-2.25.0
-

@@ -12,7 +12,7 @@ do_compile_class-target_append() {
     fi
 }
 
-EFI_TARGET = "/boot/efi/EFI/BOOT"
+EFI_TARGET = "/boot/EFI/BOOT"
 
 do_install_class-target_append() {
     if ${@bb.utils.contains('PACKAGECONFIG', 'secureboot', 'true', 'false', d)}; then

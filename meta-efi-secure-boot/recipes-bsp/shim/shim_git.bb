@@ -70,7 +70,7 @@ EXTRA_OEMAKE_append_x86-64 = " OVERRIDE_SECURITY_POLICY=1"
 PARALLEL_MAKE = ""
 COMPATIBLE_HOST = '(i.86|x86_64).*-linux'
 
-EFI_TARGET = "/boot/efi/EFI/BOOT"
+EFI_TARGET = "/boot/EFI/BOOT"
 
 MSFT = "${@bb.utils.contains('DISTRO_FEATURES', 'msft', '1', '0', d)}"
 

@@ -23,7 +23,7 @@ python () {
 
 IMAGE_INSTALL = "\
     packagegroup-core-boot \
-    dnf \
+    ${@bb.utils.contains("PACKAGE_CLASSES", "rpm", "dnf", "", d)} \
     ${SECURE_CORE_IMAGE_EXTRA_INSTALL} \
 "
 

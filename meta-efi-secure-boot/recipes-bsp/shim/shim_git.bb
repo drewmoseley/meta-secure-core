@@ -70,7 +70,7 @@ EXTRA_OEMAKE_append_x86-64 = " OVERRIDE_SECURITY_POLICY=1"
 PARALLEL_MAKE = ""
 COMPATIBLE_HOST = '(i.86|x86_64).*-linux'
 
-EFI_TARGET = "/boot/efi/EFI/BOOT"
+EFI_BOOT_PATH ?= "/boot/efi/EFI/BOOT"
 
 MSFT = "${@bb.utils.contains('DISTRO_FEATURES', 'msft', '1', '0', d)}"
 
@@ -120,10 +120,10 @@ python do_sign() {
 addtask sign after do_compile before do_install
 
 do_install() {
-    install -d "${D}${EFI_TARGET}"
+    install -d "${D}${EFI_BOOT_PATH}"
 
-    local shim_dst="${D}${EFI_TARGET}/boot${EFI_ARCH}.efi"
-    local mm_dst="${D}${EFI_TARGET}/mm${EFI_ARCH}.efi"
+    local shim_dst="${D}${EFI_BOOT_PATH}/boot${EFI_ARCH}.efi"
+    local mm_dst="${D}${EFI_BOOT_PATH}/mm${EFI_ARCH}.efi"
     if [ x"${UEFI_SB}" = x"1" ]; then
         install -m 0600 "${B}/shim${EFI_ARCH}.efi.signed" "$shim_dst"
         install -m 0600 "${B}/mm${EFI_ARCH}.efi.signed" "$mm_dst"
@@ -142,9 +142,9 @@ do_deploy() {
     install -m 0600 "${B}/mm${EFI_ARCH}.efi" \
         "${DEPLOYDIR}/efi-unsigned/mm${EFI_ARCH}.efi"
 
-    install -m 0600 "${D}${EFI_TARGET}/boot${EFI_ARCH}.efi" "${DEPLOYDIR}"
-    install -m 0600 "${D}${EFI_TARGET}/mm${EFI_ARCH}.efi" "${DEPLOYDIR}"
+    install -m 0600 "${D}${EFI_BOOT_PATH}/boot${EFI_ARCH}.efi" "${DEPLOYDIR}"
+    install -m 0600 "${D}${EFI_BOOT_PATH}/mm${EFI_ARCH}.efi" "${DEPLOYDIR}"
 }
 addtask deploy after do_install before do_build
 
-FILES_${PN} += "${EFI_TARGET}"
+FILES_${PN} += "${EFI_BOOT_PATH}"

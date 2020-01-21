@@ -48,7 +48,7 @@ EXTRA_OEMAKE = "\
 EFI_ARCH_x86 = "ia32"
 EFI_ARCH_x86-64 = "x64"
 
-EFI_TARGET = "/boot/efi/EFI/BOOT"
+EFI_BOOT_PATH ?= "/boot/efi/EFI/BOOT"
 
 python do_sign() {
     sb_sign(d.expand('${B}/Src/Efi/SELoader.efi'), \
@@ -58,17 +58,17 @@ addtask sign after do_compile before do_install
 do_sign[prefuncs] += "check_deploy_keys"
 
 do_install() {
-    install -d ${D}${EFI_TARGET}
+    install -d ${D}${EFI_BOOT_PATH}
 
-    oe_runmake install EFI_DESTDIR=${D}${EFI_TARGET}
+    oe_runmake install EFI_DESTDIR=${D}${EFI_BOOT_PATH}
     # Remove precompiled files, now provided by OVMF
-    rm -f ${D}${EFI_TARGET}/Hash2DxeCrypto.efi
-    rm -f ${D}${EFI_TARGET}/Pkcs7VerifyDxe.efi
+    rm -f ${D}${EFI_BOOT_PATH}/Hash2DxeCrypto.efi
+    rm -f ${D}${EFI_BOOT_PATH}/Pkcs7VerifyDxe.efi
 
     if [ x"${UEFI_SB}" = x"1" ]; then
         if [ x"${MOK_SB}" != x"1" ]; then
-            mv "${D}${EFI_TARGET}/SELoader${EFI_ARCH}.efi" \
-                "${D}${EFI_TARGET}/boot${EFI_ARCH}.efi"
+            mv "${D}${EFI_BOOT_PATH}/SELoader${EFI_ARCH}.efi" \
+                "${D}${EFI_BOOT_PATH}/boot${EFI_ARCH}.efi"
         fi
     fi
 }
@@ -86,13 +86,13 @@ do_deploy() {
     else
         SEL_NAME=SELoader
     fi
-    install -m 0600 "${D}${EFI_TARGET}/${SEL_NAME}${EFI_ARCH}.efi" \
+    install -m 0600 "${D}${EFI_BOOT_PATH}/${SEL_NAME}${EFI_ARCH}.efi" \
         "${DEPLOYDIR}/${SEL_NAME}${EFI_ARCH}.efi"
 }
 addtask deploy after do_install before do_build
 
 RDEPENDS_${PN} += "ovmf-pkcs7-efi"
 
-FILES_${PN} += "${EFI_TARGET}"
+FILES_${PN} += "${EFI_BOOT_PATH}"
 
 SSTATE_DUPWHITELIST += "${DEPLOY_DIR_IMAGE}/efi-unsigned"

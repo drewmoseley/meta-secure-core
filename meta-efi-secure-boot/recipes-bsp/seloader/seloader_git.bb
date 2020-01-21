@@ -48,7 +48,7 @@ EXTRA_OEMAKE = "\
 EFI_ARCH_x86 = "ia32"
 EFI_ARCH_x86-64 = "x64"
 
-EFI_BOOT_PATH ?= "/boot/efi/EFI/BOOT"
+EFI_BOOT_PATH ?= "/boot/EFI/BOOT"
 
 python do_sign() {
     sb_sign(d.expand('${B}/Src/Efi/SELoader.efi'), \

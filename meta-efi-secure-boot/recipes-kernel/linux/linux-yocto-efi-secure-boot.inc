@@ -33,7 +33,11 @@ fakeroot python do_sign() {
         shutil.copyfile(kernel, d.expand('${D}/boot/') + type + d.expand('-${KERNEL_RELEASE}'))
         ext = d.expand('${SB_FILE_EXT}')
         shutil.copyfile(kernel + ext, d.expand('${D}/boot/') + type + d.expand('-${KERNEL_RELEASE}' + ext))
-        os.symlink(type + d.expand('-${KERNEL_RELEASE}' + ext), d.expand('${D}/boot/') + type + ext)
+        target = type + d.expand('-${KERNEL_RELEASE}' + ext)
+        link = d.expand('${D}/boot/') + type + ext
+        if os.path.exists(link):
+            os.remove(link)
+        os.symlink(target, link)
 }
 
 # Make sure the kernel image has been signed before kernel_do_deploy()
